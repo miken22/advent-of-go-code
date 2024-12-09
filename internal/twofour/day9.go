@@ -1,15 +1,11 @@
 package twofour
 
 import (
-	"encoding/json"
 	"log"
-	"os"
-	"slices"
 
 	"github.com/miken22/advent-of-go-code.git/pkg/utils"
 )
 
-var emptyByte byte = '.'
 var emptyInt int = -1
 
 func Solve_day_nine(input []string) {
@@ -28,117 +24,107 @@ func Solve_day_nine(input []string) {
 
 	diskMapArr = makeStringMap(diskMap)
 
-	rearrangeWholeFiles(diskMapArr)
+	defrag(diskMapArr)
 
-	log.Printf("rearranged: %v", diskMapArr)
-
-	file, _ := os.ReadFile("../../output")
-
-	type comparison struct {
-		theirs []string
-	}
-	comp := comparison{}
-	json.Unmarshal(file, &comp)
-	compMap := make([]int, len(diskMapArr))
-	for index, val := range comp.theirs {
-		if val == "." {
-			compMap[index] = -1
-		} else {
-			compMap[index] = utils.ToInteger(val)
-		}
-	}
-
-	if slices.Equal(diskMapArr, compMap) {
-		print("ahhh")
-	}
+	log.Printf("defragged: %v", diskMapArr)
 
 	log.Print(checksum(diskMapArr))
 
 }
 
-func rearrangeWholeFiles(diskMapArr []int) {
+var movedFiles = map[int]bool{}
 
-	leftPosition, rightPosition := findLeftRightPosition(diskMapArr)
+func defrag(diskMapArr []int) {
 
-	for {
-		if rightPosition <= 0 {
-			break
-		}
-		if diskMapArr[rightPosition] == emptyInt {
-			rightPosition--
-			continue
-		}
-
-		fileSize := 0
-		leftPosition, fileSize = findSpaceAndFileSize(diskMapArr, rightPosition)
-
-		if leftPosition != -1 && leftPosition < rightPosition {
-			swap2(diskMapArr, leftPosition, rightPosition, fileSize)
-			leftPosition += fileSize
-			rightPosition -= fileSize
-			// log.Printf("updated: %v", diskMapArr)
-		} else {
-			rightPosition -= fileSize
-			leftPosition = 0
-		}
-
-	}
-
-}
-
-func swap2(diskMapArr []int, leftPosition, rightPosition, size int) {
-	for {
-		if size == 0 {
-			break
-		}
-		diskMapArr[leftPosition] = diskMapArr[rightPosition]
-		diskMapArr[rightPosition] = emptyInt
-		leftPosition++
-		rightPosition--
-		size--
-	}
-}
-
-func findSpaceAndFileSize(diskMapArr []int, rightPosition int) (int, int) {
-	fileSize := 1
-	fileId := diskMapArr[rightPosition]
-	rightPosition -= 1
+	rightPosition := len(diskMapArr) - 1
 
 	for {
 		if rightPosition < 0 {
 			break
 		}
-		if diskMapArr[rightPosition] != fileId {
-			break
+
+		fileId := diskMapArr[rightPosition]
+
+		if fileId == emptyInt {
+			rightPosition--
+			continue
 		}
-		rightPosition--
-		fileSize++
+
+		if _, ok := movedFiles[fileId]; ok {
+			rightPosition--
+			continue
+		}
+
+		movedFiles[fileId] = true
+
+		fileSize := 0
+		for {
+			if rightPosition < 0 {
+				fileSize = -1
+				break
+			}
+			if diskMapArr[rightPosition] != fileId {
+				break
+			}
+			fileSize++
+			rightPosition--
+		}
+
+		candidates := findFreeBlocks(fileSize, rightPosition)
+		if len(candidates) == 0 {
+			continue
+		}
+
+		leftPosition := len(diskMapArr)
+		blockSize := 0
+		for _, candidate := range candidates {
+			if candidate.location < leftPosition {
+				leftPosition = candidate.location
+				blockSize = candidate.size
+			}
+		}
+		for j := leftPosition; j < leftPosition+fileSize; j++ {
+			diskMapArr[j] = fileId
+		}
+		for j := rightPosition + 1; j < rightPosition+fileSize+1; j++ {
+			diskMapArr[j] = -1
+		}
+
+		delete(freeSpace, leftPosition)
+
+		if fileSize < blockSize {
+			freeSpace[leftPosition+fileSize] = blockSize - fileSize
+		}
+
 	}
 
-	emptyChunk := 0
-	for leftPosition := 0; leftPosition <= len(diskMapArr)/2; leftPosition++ {
-		if diskMapArr[leftPosition] != emptyInt {
-			emptyChunk = 0
-		}
-		if emptyChunk >= fileSize {
-			return leftPosition - fileSize + 1, fileSize
-		}
-		emptyChunk++
-	}
+}
 
-	return -1, fileSize
+type pair struct {
+	location int
+	size     int
+}
+
+func findFreeBlocks(fileSize, rightPosition int) []pair {
+	if fileSize == -1 {
+		return []pair{}
+	}
+	candidates := []pair{}
+	for key, value := range freeSpace {
+		if key <= rightPosition && value >= fileSize {
+			candidates = append(candidates, pair{location: key, size: value})
+		}
+	}
+	return candidates
 }
 
 func checksum(diskMapArr []int) int {
 	sum := 0
-	fileId := 0
 	for index, char := range diskMapArr {
-		print(index, " ", diskMapArr[index], "\n")
 		if char == emptyInt {
 			continue
 		}
 		sum += index * diskMapArr[index]
-		fileId++
 	}
 	return sum
 }
@@ -191,6 +177,8 @@ func findLeftRightPosition(diskMapArr []int) (int, int) {
 	return leftPosition, rightPosition
 }
 
+var freeSpace = map[int]int{}
+
 func makeStringMap(diskMap string) []int {
 	diskMapArr := make([]int, 0)
 	fileId := 0
@@ -202,6 +190,7 @@ func makeStringMap(diskMap string) []int {
 			}
 			fileId++
 		} else {
+			freeSpace[len(diskMapArr)] = val
 			for range val {
 				diskMapArr = append(diskMapArr, -1)
 			}

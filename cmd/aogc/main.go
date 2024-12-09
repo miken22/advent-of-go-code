@@ -9,9 +9,9 @@ import (
 
 func main() {
 
-	practiceInput := utils.LoadTestFileLines(os.Args[1])
+	// practiceInput := utils.LoadTestFileLines(os.Args[1])
 
-	twofour.Solve_day_nine(practiceInput)
+	// twofour.Solve_day_nine(practiceInput)
 
 	input := utils.LoadTestFileLines(os.Args[2])
 
