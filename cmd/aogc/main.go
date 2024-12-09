@@ -11,10 +11,10 @@ func main() {
 
 	practiceInput := utils.LoadTestFileLines(os.Args[1])
 
-	twofour.Solve_day_eight(practiceInput)
+	twofour.Solve_day_nine(practiceInput)
 
 	input := utils.LoadTestFileLines(os.Args[2])
 
-	twofour.Solve_day_eight(input)
+	twofour.Solve_day_nine(input)
 
 }
