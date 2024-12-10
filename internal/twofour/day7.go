@@ -14,22 +14,22 @@ var partTwoOperands = []string{"||", "*", "+"}
 func Solve_day_seven(input []string) {
 
 	sum := 0
-	// for _, line := range input {
+	for _, line := range input {
 
-	// 	split := strings.Split(line, ":")
+		split := strings.Split(line, ":")
 
-	// 	result, err := strconv.Atoi(split[0])
+		result, err := strconv.Atoi(split[0])
 
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
+		if err != nil {
+			panic(err)
+		}
 
-	// 	numbers := utils.StringToIntSlice(split[1], " ")
+		numbers := utils.StringToIntSlice(split[1], " ")
 
-	// 	sum += solve_recursive(numbers, result, false)
-	// }
+		sum += solve_recursive(numbers, result, false)
+	}
 
-	// log.Printf("Part One Sum: %d", sum)
+	log.Printf("Part One Sum: %d", sum)
 
 	sum = 0
 	for _, line := range input {

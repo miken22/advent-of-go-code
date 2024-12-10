@@ -19,7 +19,8 @@ func main() {
 	// twofour.Solve_day_six(practiceInput)
 	// twofour.Solve_day_seven(practiceInput)
 	// twofour.Solve_day_eight(practiceInput)
-	twofour.Solve_day_nine(practiceInput)
+	// twofour.Solve_day_nine(practiceInput)
+	twofour.Solve_day_ten(practiceInput)
 
 	input := utils.LoadTestFileLines(os.Args[2])
 
@@ -31,6 +32,7 @@ func main() {
 	// twofour.Solve_day_six(input)
 	// twofour.Solve_day_seven(input)
 	// twofour.Solve_day_eight(input)
-	twofour.Solve_day_nine(input)
+	// twofour.Solve_day_nine(input)
+	twofour.Solve_day_ten(input)
 
 }

@@ -1,7 +1,7 @@
 package twofour
 
 import (
-	"fmt"
+	"log"
 	"slices"
 	"strings"
 )
@@ -20,7 +20,6 @@ func Solve_day_six(input []string) {
 	originalInput := make([]string, len(input))
 	copy(originalInput, input)
 
-	// account for starting position
 	findRoute(input, row, column, direction)
 
 	steps := 0
@@ -29,20 +28,19 @@ func Solve_day_six(input []string) {
 		steps += strings.Count(input[row], "X")
 	}
 
-	fmt.Printf("number of steps: %d\n", steps)
+	log.Printf("number of steps: %d\n", steps)
 
 	copy(input, originalInput)
 
 	numLoops := findLoops(input, row, column)
 
-	fmt.Printf("number of loops: %d\n", numLoops)
+	log.Printf("number of loops: %d\n", numLoops)
 
 }
 
 var loopFound bool = false
-var visitedNodes = map[location][]int{}
+var visitedNodes = map[guardLocation][]int{}
 
-// Sloooooooooooooooooooooooooooooooooooooooooooooooow
 func findLoops(input []string, row, column int) int {
 
 	startPos := row
@@ -98,7 +96,7 @@ func findLoops(input []string, row, column int) int {
 
 }
 
-type location struct {
+type guardLocation struct {
 	row       int
 	column    int
 	direction int
@@ -136,7 +134,7 @@ func walkDirection2(input []string, row, column, obsRow, obsCol, direction int) 
 			return steps
 		}
 
-		loc := location{row: row, column: column, direction: direction}
+		loc := guardLocation{row: row, column: column, direction: direction}
 
 		if _, ok := visitedNodes[loc]; !ok {
 			visitedNodes[loc] = []int{direction}
