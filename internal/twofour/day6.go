@@ -2,6 +2,7 @@ package twofour
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -28,57 +29,79 @@ func Solve_day_six(input []string) {
 		steps += strings.Count(input[row], "X")
 	}
 
-	printBoard(input)
-
 	fmt.Printf("number of steps: %d\n", steps)
 
 	copy(input, originalInput)
 
-	findLoops(input, row, column, direction)
+	numLoops := findLoops(input, row, column)
 
 	fmt.Printf("number of loops: %d\n", numLoops)
 
 }
 
-var numLoops int = 0
 var loopFound bool = false
+var visitedNodes = map[location][]int{}
 
-func findLoops(input []string, row, column, direction int) {
+// Sloooooooooooooooooooooooooooooooooooooooooooooooow
+func findLoops(input []string, row, column int) int {
 
-	originalInput := make([]string, len(input))
-	copy(originalInput, input)
+	startPos := row
+	startCol := column
+	numLoops := 0
 
 	for obsRow, rowStr := range input {
 
-		copy(input, originalInput)
-
 		for obsCol := range rowStr {
 
-			steps := 0
+			row = startPos
+			column = startCol
+			loopFound = false
+			left = false
+			direction := 0
 
-			steps += walkDirection2(input, row, column, obsRow, obsCol, direction)
+			for {
 
-			if loopFound {
-				loopFound = false
-				printBoard(input)
-				break
+				steps := 0
+
+				steps += walkDirection2(input, row, column, obsRow, obsCol, direction)
+
+				if left {
+					clear(visitedNodes)
+					break
+				}
+
+				if loopFound {
+					numLoops++
+					clear(visitedNodes)
+					break
+				}
+
+				switch direction {
+				case UP:
+					row -= steps
+				case DOWN:
+					row += steps
+				case LEFT:
+					column -= steps
+				case RIGHT:
+					column += steps
+				}
+
+				direction = rotate(direction)
 			}
 
-			switch direction {
-			case UP:
-				row -= steps
-			case DOWN:
-				row += steps
-			case LEFT:
-				column -= steps
-			case RIGHT:
-				column += steps
-			}
-
-			direction = rotate(direction)
 		}
+
 	}
 
+	return numLoops
+
+}
+
+type location struct {
+	row       int
+	column    int
+	direction int
 }
 
 func walkDirection2(input []string, row, column, obsRow, obsCol, direction int) int {
@@ -98,6 +121,7 @@ func walkDirection2(input []string, row, column, obsRow, obsCol, direction int) 
 	}
 
 	for {
+
 		if !(row+dy >= 0 && row+dy < len(input) && column+dx >= 0 && column+dx < len(input[0])) {
 			left = true
 			return steps
@@ -106,20 +130,22 @@ func walkDirection2(input []string, row, column, obsRow, obsCol, direction int) 
 		row += dy
 		column += dx
 		char := input[row][column]
+
 		if char == '#' || (row == obsRow && column == obsCol) {
+			// hit obstacle, need to rotate
 			return steps
 		}
 
-		t := []rune(input[row])
+		loc := location{row: row, column: column, direction: direction}
 
-		if t[column] == 'X' {
-			numLoops++
-			loopFound = true
-			return steps
+		if _, ok := visitedNodes[loc]; !ok {
+			visitedNodes[loc] = []int{direction}
+		} else if ok {
+			if slices.Contains(visitedNodes[loc], direction) {
+				loopFound = true
+				return steps
+			}
 		}
-
-		t[column] = 'X'
-		input[row] = string(t)
 
 		steps++
 	}
@@ -196,13 +222,6 @@ func walkDirection(input []string, row, column, direction int) int {
 		steps++
 	}
 
-}
-
-func printBoard(input []string) {
-	for index := range input {
-		fmt.Printf("%v\n", input[index])
-	}
-	fmt.Println("--------------------")
 }
 
 func get_start_position(input []string) (int, int, int) {
